@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Cache-Control" content="no-store" />
+<script src="./js/Pizzicato.js"></script>
+<script>
+
+
+var context = new AudioContext(); 
+var electro = context.createBuffer(2, context.sampleRate*5, context.sampleRate);
+var context2 = new AudioContext(); 
+var electro2 = context2.createBuffer(2, context2.sampleRate*5, context2.sampleRate);
+var context3 = new AudioContext(); 
+var electro3 = context3.createBuffer(2, context3.sampleRate*5, context3.sampleRate);
+var context4 = new AudioContext(); 
+var electro4 = context4.createBuffer(2, context4.sampleRate*5, context4.sampleRate);
+var context5 = new AudioContext(); 
+var electro5 = context5.createBuffer(2, context5.sampleRate*5, context5.sampleRate);
+var context6 = new AudioContext(); 
+var electro6 = context6.createBuffer(2, context6.sampleRate*5, context6.sampleRate);
+
+var compressor;
+var highPassFilter;
+var lowPassFilter;
+var delay;
+var distortion;
+
+
+var sound = new Pizzicato.Sound({ 
+    source: 'file',
+    options: { 
+    	path: './ogg/ragatanga.mp3',
+    	loop: true 
+    }
+}, function() {
+    sound.play();
+});
+
+function playMusic(){
+	sound.play();
+}
+
+function pauseMusic(){
+	sound.pause();
+}
+
+function stopMusic(){
+	sound.stop();
+}
+
+
+function Delay(){
+	const feed = parseFloat(document.getElementById("feedD").value);
+	const time = parseFloat(document.getElementById("timeD").value);
+	console.log(time);
+	const mix = parseFloat(document.getElementById("mixD").value);
+	delay = new Pizzicato.Effects.Delay({
+    	feedback: feed,
+    	time: time,
+    	mix: mix
+	});
+	sound.addEffect(delay);
+}
+
+function HighPassFilter(){
+	const freq = parseFloat(document.getElementById("freqHPS").value);
+	const peak = parseFloat(document.getElementById("peakHPS").value);
+	const mix = parseFloat(document.getElementById("mixHPS").value);
+	highPassFilter = new Pizzicato.Effects.HighPassFilter({
+    	frequency: freq,
+    	peak: peak,
+    	mix: mix
+	});
+	sound.addEffect(highPassFilter);
+}
+
+function LowPassFilter(){
+	const freq = parseFloat(document.getElementById("freqLPF").value);
+	const peak = parseFloat(document.getElementById("peakLPF").value);
+	const mix = parseFloat(document.getElementById("mixLPF").value);
+	lowPassFilter = new Pizzicato.Effects.LowPassFilter({
+    	frequency: freq,
+    	peak: peak,
+    	mix: mix
+	});
+	sound.addEffect(lowPassFilter);
+}
+
+function Compressor(){
+	const thr = parseFloat(document.getElementById("thrCOM").value);
+	const knee = parseFloat(document.getElementById("kneeCOM").value);
+	const atk = parseFloat(document.getElementById("atkCOM").value);
+	const rel = parseFloat(document.getElementById("relCOM").value);
+	const ratio = parseFloat(document.getElementById("ratioCOM").value);
+	compressor = new Pizzicato.Effects.Compressor({
+   		threshold: thr,
+   		knee: knee,
+   		attack: atk,
+   		release: rel,
+   		ratio: ratio
+	});
+	sound.addEffect(compressor);
+}
+
+function Distortion(){
+	const gain = parseFloat(document.getElementById("gainD").value);
+	distortion = new Pizzicato.Effects.Distortion({
+    	gain: gain,
+	});
+	sound.addEffect(distortion);
+}
+
+function desactiveDelay() {
+	sound.removeEffect(delay);
+}
+
+function desactiveHighPass() {
+	sound.removeEffect(highPassFilter);
+}
+
+function desactiveLowPass() {
+	sound.removeEffect(lowPassFilter);
+}
+
+function desactiveCompressor() {
+	sound.removeEffect(compressor);
+}
+
+function desactiveDistortion(){
+	sound.removeEffect(distortion);
+}
+
+function desactiveall(){
+	sound.removeEffect(compressor);
+	sound.removeEffect(highPassFilter);
+	sound.removeEffect(lowPassFilter);
+	sound.removeEffect(delay);
+	sound.removeEffect(distortion);
+}
+
+
+
+var interpolacao;
+
+function interpolate(note, obj) {
+	var temp0 = new Float32Array;
+	var temp1 = new Float32Array;
+	interpolacao = obj.context.createBuffer(1, obj.context.sampleRate * 5, obj.context.sampleRate);
+    temp0 = obj.buffer.getChannelData(0);
+    temp1 = interpolacao.getChannelData(0);
+    var step = Math.pow(1.059463094, note); //raiz 12 de 2 - proporcao de 1 st
+	var position = 0;
+	
+    for (var i = 0; position < obj.buffer.length; i++) {
+		var x1 = Math.floor(position) - 1;
+		var x2 = x1;
+        temp1[i] = (x1 - position - 1) * temp0[x2] + (x2 - position - 1) * temp0[x1];
+        position += step ;
+    }
+}
+//------- --------//
+
+function Memes(context, electro) {
+	this.context = context;
+	this.buffer = this.context.createBuffer(2, this.context.sampleRate*5, this.context.sampleRate);
+	this.buffer = electro;	
+}
+
+Memes.prototype.play = function(scale) {
+	interpolate(scale, this);
+	var playSound = context.createBufferSource(); //cria um buffer para armazenar o som
+	playSound.buffer = interpolacao; //coloca o som interpolado no buffer
+	playSound.connect(context.destination); //conecta para a saida (falantes)
+	playSound.start(0); //Play!
+}
+
+
+var getSound = new XMLHttpRequest();  
+getSound.open("GET", "ogg/kasinao.ogg", true); 
+getSound.responseType = "arraybuffer"; 
+getSound.onload = function() { 
+context.decodeAudioData(getSound.response, function(buffer){
+	electro = buffer; 
+	});
+}
+getSound.send(); 
+
+
+
+var getSound2 = new XMLHttpRequest();  
+getSound2.open("GET", "ogg/erou.ogg", true); 
+getSound2.responseType = "arraybuffer"; 
+getSound2.onload = function() { 
+context2.decodeAudioData(getSound2.response, function(buffer){
+	electro2 = buffer; 
+	});
+}
+getSound2.send();
+
+var getSound3 = new XMLHttpRequest();  
+getSound3.open("GET", "ogg/Aham-Claudia-Senta-La.ogg", true); 
+getSound3.responseType = "arraybuffer"; 
+getSound3.onload = function() { 
+context3.decodeAudioData(getSound3.response, function(buffer){
+	electro3 = buffer; 
+	});
+}
+getSound3.send();
+
+var getSound4 = new XMLHttpRequest();  
+getSound4.open("GET", "ogg/risada_carlos_alberto.ogg", true); 
+getSound4.responseType = "arraybuffer"; 
+getSound4.onload = function() { 
+context4.decodeAudioData(getSound4.response, function(buffer){
+	electro4 = buffer; 
+	});
+}
+getSound4.send();
+
+var getSound5 = new XMLHttpRequest();  
+getSound5.open("GET", "ogg/eita-giovana.ogg", true); 
+getSound5.responseType = "arraybuffer"; 
+getSound5.onload = function() { 
+context5.decodeAudioData(getSound5.response, function(buffer){
+	electro5 = buffer; 
+	});
+}
+getSound5.send();
+
+var getSound6 = new XMLHttpRequest();  
+getSound6.open("GET", "ogg/eusourica.ogg", true); 
+getSound6.responseType = "arraybuffer"; 
+getSound6.onload = function() { 
+context6.decodeAudioData(getSound6.response, function(buffer){
+	electro6 = buffer; 
+	});
+}
+getSound6.send();
+	
+function Play(nota) { //toca a nota
+	var memes = new Memes(context, electro);
+	memes.play(nota);
+}
+
+function Play2(nota) { //toca a nota
+	var memes = new Memes(context2, electro2);
+	memes.play(nota);
+}
+
+function Play3(nota){
+	var memes = new Memes(context,electro);
+	memes.play(nota);
+}
+
+function Play4(nota){
+	var memes = new Memes(context3,electro3);
+	memes.play(nota);
+}
+
+function Play5(nota){
+	var memes = new Memes(context4,electro4);
+	memes.play(nota);
+}
+
+function Play6(nota){
+	var memes = new Memes(context5,electro5);
+	memes.play(nota);
+}
+
+function Play7(nota){
+	var memes = new Memes(context6,electro6);
+	memes.play(nota);
+}
+
+
+
+
+window.addEventListener("keypress", SelectKey);
+
+function SelectKey (e) {
+	switch (String.fromCharCode(e.charCode)) {
+		case 'q': Play2(-5); break;
+		case 'w': Play2(0); break;
+		case 'e': Play2(5); break;
+		case 'a': Play3(-5); break;
+		case 's': Play3(0); break;
+		case 'd': Play3(5); break;
+		case 'z': Play4(-5); break;
+		case 'x': Play4(0); break;
+		case 'c': Play4(5); break;
+		case 'i': Play5(-5); break;
+		case 'o': Play5(0); break;
+		case 'p': Play5(5); break;
+		case 'j': Play6(-5); break;
+		case 'k': Play6(0); break;
+		case 'l': Play6(5); break;
+		case 'b': Play7(-5); break;
+		case 'n': Play7(0); break;
+		case 'm': Play7(5); break;
+		case 'Q': Play2(-5); break;
+		case 'W': Play2(0); break;
+		case 'E': Play2(5); break;
+		case 'A': Play3(-5); break;
+		case 'S': Play3(0); break;
+		case 'D': Play3(5); break;
+		case 'Z': Play4(-5); break;
+		case 'X': Play4(0); break;
+		case 'C': Play4(5); break;
+		case 'I': Play5(-5); break;
+		case 'O': Play5(0); break;
+		case 'P': Play5(5); break;
+		case 'J': Play6(-5); break;
+		case 'K': Play6(0); break;
+		case 'L': Play6(5); break;
+		case 'B': Play7(-5); break;
+		case 'N': Play7(0); break;
+		case 'M': Play7(5); break;
+
+	}
+}
+
+</script>
+</head>
+
+
+<center>
+<font face = "Arial" >
+<h1 style="color: black">INSTRUMEMES 2.0</h1>
+</font>
+</center>
+<body background="img/nazare.jpg"> </body>
+<body>
+<button id="play" onclick="playMusic()">Play!</button><br>
+<button id="pause" onclick="pauseMusic()">Pause!</button><br>
+<button id="stop" onclick="stopMusic()">Stop!</button><br>
+
+<center>
+
+<button id="delay" onclick="Delay()">Delay!</button>
+<button id="sdelay" onclick="desactiveDelay()">Stop Delay!</button><br>
+<table border="1">
+<tr>
+<td>Feedback</td>
+<td>Time</td>
+<td>Mix</td>
+</tr>
+<td>
+<input name="feedD" type="range" min="0" max="1" step="0.01" value="0.5" id="feedD"></input></td><td>
+<input name="timeD" type="range" id="timeD" min="0" max="5" step="0.01" value="0.3"></input></td><td>
+<input name="mixD" type="range" id="mixD" min="0" max="1" step="0.01" value="0.5"></input></td><br>
+</td>
+</tr>
+</table><br>
+<button id="highpass" onclick="HighPassFilter()">HighPass</button>
+<button id="shighpass" onclick="desactiveHighPass()">Stop HighPass</button><br>
+<table border="1">
+<tr>
+<td>Frequency</td>
+<td>Peak</td>
+<td>Mix</td>
+</tr>
+<td>
+<input name="freqHPS" type="range" min="10" max="20000" step="1" value="350" id="freqHPS"></input></td><td>
+<input name="peakHPS" type="range" min="0.0001" max="1000" step="0.0001" value="1" id="peakHPS" ></input></td><td>
+<input name="mixHPS" type="range" min="0" max="1" step="0.01" value="0.5" id="mixHPS"></input></td><br>
+</td></tr>
+</table><br>
+</table><br>
+<button id="highpass" onclick="LowPassFilter()">LowPass</button>
+<button id="shighpass" onclick="desactiveLowPass()">Stop LowPass</button><br>
+<table border="1">
+<tr>
+<td>Frequency</td>
+<td>Peak</td>
+<td>Mix</td>
+</tr>
+<td>
+<input name="freqLPF" type="range" min="10" max="20000" step="1" value="350" id="freqLPF"></input></td><td>
+<input name="peakLPF" type="range" min="0.0001" max="1000" step="0.0001" value="1" id="peakLPF" ></input></td><td>
+<input name="mixLPF" type="range" min="0" max="1" step="0.01" value="0.5" id="mixLPF"></input></td><br>
+</td></tr>
+</table><br>
+<button id="compre" onclick="Compressor()">Compressor</button>
+<button id="scompressor" onclick="desactiveCompressor()">Stop Compressor</button><br><br>
+<table border="1">
+<tr>
+<td>Threshhold</td>
+<td>Knee</td>
+<td>Attack</td>
+<td>Release</td>
+<td>Ratio</td>
+</tr>
+<tr>
+<td><input name="thrCOM" type="range" min="-100" max="0" step="1" value="-20" id="thrCOM"></input></td>
+<td><input name="kneeCOM" type="range" id="kneeCOM" min="0" max="40" step="0.3" value="30"></input></td>
+<td><input name="atkCOM" type="range" id="atkCOM" min="0" max="1" step="0.03" value="0"></input></td>
+<td><input name="relCOM" type="range" min="0" max="1" step="0.025" value="0" id="relCOM"></input></td>
+<td><input name="ratioCOM" type="range" min="1" max="20" step="12" value="1" id="ratioCOM"></input></td>
+</tr>
+
+</table>
+<br>
+</table>
+<button id="distortion" onclick="Distortion()">Distortion</button>
+<button id="sdistortion" onclick="desactiveDistortion()">Stop Distortion</button><br><br>
+<table border="1">
+<tr>
+<td>Gain</td>
+</tr>
+<td>
+<input name="gainD" type="range" min="0" max="1" value="0.5" id="gainD"></input></td>
+</tr>
+</table><br>
+<table > 
+<tr> 
+<td style = " width: 200px;  ">
+<img src="img/sombrio.jpg" onclick="Play2(0)" style="width:500px;height:300px";>
+<br>
+<br>
+<center>
+<button onclick="Play2(-3);">E</button>
+<button onclick="Play2(-1);">R</button>
+<button onclick="Play2(0);">R</button>
+<button onclick="Play2(2);">O</button>
+<button onclick="Play2(3);">U</button>
+</center>
+<br></td>
+<br>
+<td style = " width: 200px; ">
+<img src="img/gilb3.jpg" onclick="Play(0)" style="width:500px;height:250px";>
+<center>
+<br>
+<br>
+<button onclick="Play3(-5);">K</button>
+<button onclick="Play3(-3);">A</button>
+<button onclick="Play3(0);">S</button>
+<button onclick="Play3(1);">S</button>
+<button onclick="Play3(3);">I</button>
+<button onclick="Play3(6);">N</button>
+<button onclick="Play3(7);">A</button>
+<button onclick="Play3(8);">O</button>
+</center>
+<br>
+</td>
+</tr> 
+</table>
+	
+
+
+<center>
+<table > 
+<tr> 
+<br>
+<td style = " width: 200px;">
+<img src="img/xuxa.jpg" onclick="Play4(0)" style="width:500px;height:300px";/>
+<br>
+<br>
+<center>
+<button onclick="Play4(-1);">X</button>
+<button onclick="Play4(0);">U</button>
+<button onclick="Play4(1);">X</button>
+<button onclick="Play4(2);">A</button>
+<br>
+<br>
+</center>
+<br></td>
+<br>
+<td style = " width: 200px; ">
+<img src="img/carlos.jpg" onclick="Play5(0)" style="width:500px;height:300px";>
+<center>
+<br>
+<br>
+<button onclick="Play5(-5);">P</button>
+<button onclick="Play5(-1);">R</button>
+<button onclick="Play5(0);">A</button>
+<button onclick="Play5(1);">S</button>
+<button onclick="Play5(3);">S</button>
+<button onclick="Play5(6);">A</button>
+</center>
+<br>
+</td>
+</tr> 
+</table>
+
+<center>
+<table > 
+<tr> 
+<br>
+<td style = " width: 200px;">
+<img src="img/eitagiovana.png" onclick="Play6(0)" style="width:500px;height:300px";/>
+<br>
+<br>
+<center>
+<button onclick="Play6(-1);">E</button>
+<button onclick="Play6(0);">I</button>
+<button onclick="Play6(1);">T</button>
+<button onclick="Play6(2);">A</button>
+<br>
+<br>
+</center>
+<br></td>
+<br>
+<td style = " width: 200px; ">
+<img src="img/rica.jpg" onclick="Play7(0)" style="width:500px;height:300px";>
+<center>
+<br>
+<br>
+<button onclick="Play7(-5);">R</button>
+<button onclick="Play7(-1);">I</button>
+<button onclick="Play7(0);">C</button>
+<button onclick="Play7(3);">A</button>
+</center>
+<br>
+</td>
+</tr> 
+</table>
+
+
+<div class= "container"  style=" border: 2px solid white;width:25%;height:25%; ">
+   <style>
+     .container{
+      background-image: url("img/ata.jpg");
+      background-repeat: repeat-x;
+    }
+    </style>
+
+<font>
+<font color = "black" >
+<font face="Arial">
+<br> Memes BR <br>
+
+<br> q w e - ERROU <br>
+<br> a s d- AE KASSINAO <br>
+<br> z x c - AHAM CLAUDIA, SENTA LA </br> 
+<br> i o p - PRASSA EH NOSSA<br>
+<br> j k l - EITA GIOVANA<br>
+<br> b n m - EU SOU RICA<br>
+<br>
+<h3>COPYRIGHT: <a href="https://alemangui.github.io/pizzicato/">PIZZICATO</a></h3>
+</font>
+</div></center>
+</body>
+</html>
+
